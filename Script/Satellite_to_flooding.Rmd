@@ -49,18 +49,18 @@ Naming conventions for the satellite data:
 
 ```{r Input data - rasters}
 # Set your working directory to the folder containing the TIFF files
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Raw Landsat data")
+setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Raw Landsat data")
 
 # List all the TIFF files in the folder
 all_files <- list.files() # list all files, including those we don't care about
 print(all_files) # check how file names are being read - looks like the extension TIF is capitalised, which we need to code for.
 
-# Now list just the file names we're interested in
+# Now list just the file names we're interested in - bands 2 to 7
 # //d+ refers to a string of one or more digits (0-9)
 file_list <- list.files(pattern = paste("^(LT05|LE07|LC08)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_(SR|ST)_B[2-7]\\.TIF", sep = ""))
 print(file_list)
 
-# Function to extract relevant information from the filename
+# Function to extract relevant information from the filename - satellite, location, date, band
 extract_info <- function(filename) {
   parts <- strsplit(filename, "_")[[1]] # the [[1]] extracts the character vector of the components of the file name, rather than creating a list that you have to access the character vector from within
   satellite <- paste0(substr(parts[1], 1, 1), substr(parts[1], nchar(parts[1]), nchar(parts[1])))  # Extract the first and fourth characters as satellite name (L5, L7, or L8)
@@ -120,8 +120,8 @@ for (filename in file_list) {
 ```
 
 ```{r Input data - shapefiles}
-cumbung <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Boundaries/Cumbung_ecological.shp")
-booligal <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Boundaries/Booligal_ecological.shp")
+cumbung <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Boundaries/Cumbung_ecological.shp")
+booligal <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Boundaries/Booligal_ecological.shp")
 ```
 
 # 2. Manipulate data
@@ -186,9 +186,35 @@ Bands of interest to calculate water index
 
 # Up to here - errors below as you can't input a list into the calc function...
 
-```{r Calculate water index - Landsat 4/5 and 7 data}
+```{r troubleshooting}
 
 grouped_rasters_cumbung[["20111104"]][["B3"]]
+plot(grouped_rasters_cumbung[["20111104"]][["B3"]][[1]]) # plotting an empty raster
+
+# try plotting a raster directly from the raw data
+testRaster <- raster("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Raw Landsat data/LT05_L2SP_094084_20111104_20200820_02_T1_SR_B2.tif")
+plot(testRaster) # plots correctly, so the program is not reading the rasters in the list correctly
+
+# try plotting a raster from the original imported list
+plot(cumbung_list[["L5_094084_20111104_B6"]]) # plots correctly, issue is not from this stage.
+
+# try plotting the clip layer
+plot(cumbung) # this plots with five plots according to attribute, not sure if that's normal
+cumbung # getting info about this shapefile, it looks like its geometry is in latitude rather than a projected coordinate system, which may have stuffed things up when cropping?
+
+# try plotting a clipped raster
+plot(clipped_cumbung_list[["L5_094084_20111104_B6"]]) # empty.. I think it was the clipping that stuffed things around due to different coordinate systems
+
+# try water index from below using rasters from the original images, rather than the clipped images
+
+water_index <- overlay(cumbung_list[["L5_094084_20111104_B2"]], cumbung_list[["L5_094084_20111104_B3"]], cumbung_list[["L5_094084_20111104_B4"]], cumbung_list[["L5_094084_20111104_B5"]], cumbung_list[["L5_094084_20111104_B7"]], fun = function(B2, B3, B4, B5, B7) {
+  return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
+})
+plot(water_index) # success!! woohoo
+```
+
+
+```{r Calculate water index - Landsat 4/5 and 7 data}
 
 # list all the possible dates
 cumbung_dates <- names(grouped_rasters_cumbung)
@@ -198,28 +224,14 @@ cumbung_dates
 water_index_results <- list()
 
 
-for (date in cumbung_dates){
-  # calculate the water index
-  water_index_raster <- 1.7204+171*grouped_rasters_cumbung[[date]][["B2"]]+3*grouped_rasters_cumbung[[date]][["B3"]]-70*grouped_rasters_cumbung[[date]][["B4"]]-45*grouped_rasters_cumbung[[date]][["B5"]]-71*grouped_rasters_cumbung[[date]][["B7"]]
-  # store the results in a new results list
-  water_index_results[[date]] <- water_index_raster
-}
-
-
-
-1.7204+171*grouped_rasters_cumbung[["20111104"]][["B2"]]+3*grouped_rasters_cumbung[["20111104"]][["B3"]]-70*grouped_rasters_cumbung[["20111104"]][["B4"]]-45*grouped_rasters_cumbung[["20111104"]][["B5"]]-71*grouped_rasters_cumbung[["20111104"]][["B7"]]
-
-
 # use the overlay function to do calculations using multiple rasters
-water_index <- overlay(B2, B3, B4, B5, B7, fun = function(B2, B3, B4, B5, B7) {
-  1.7204+171*B2+3*B3-70*B4-45*B5-71*B7
-})
-
 water_index <- overlay(grouped_rasters_cumbung[["20111104"]][["B2"]][[1]], grouped_rasters_cumbung[["20111104"]][["B3"]][[1]], grouped_rasters_cumbung[["20111104"]][["B4"]][[1]], grouped_rasters_cumbung[["20111104"]][["B5"]][[1]], grouped_rasters_cumbung[["20111104"]][["B7"]][[1]], fun = function(B2, B3, B4, B5, B7) {
-  1.7204+171*B2+3*B3-70*B4-45*B5-71*B7
+  return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
 })
 plot(water_index)
 
+setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
+#writeRaster(water_index,filename = "Export/water_index_20111104_cumbung.tif", format="GTiff", overwrite = TRUE)
 
 ```
 
