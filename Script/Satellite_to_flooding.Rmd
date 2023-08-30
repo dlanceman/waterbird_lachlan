@@ -1,0 +1,238 @@
+---
+title: "Satellite imagery to flooding data"
+author: "Dana Lanceman"
+date: "2023-07-21"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Import and load packages}
+#install.packages("raster")
+#install.packages("stringr")
+#install.packages("sf")
+
+library("raster")
+library("stringr")
+library("sf")
+```
+
+# 1. Input data
+We need to input the appropriate satellite data for each year (2010-2022) and location (Cumbung and Booligal).
+We need green, red, NIR, SWIR 1 and SWIR 2 bands.
+- for Landsat 4/5 and 7 data, these are band 2 (green), 3 (red), 4 (NIR), 5 (SWIR 1) and 7 (SWIR 2)
+- for Landsat 8/9 data, these are band 3 (green), 4 (red), 5 (NIR), 6 (SWIR 1) and 7 (SWIR 2)
+
+Naming format for data:
+- Example name: LT05_L2SP_094084_20111104_20200820_02_T1_ST_QA
+  - This is equivalent to SatelliteType_L2SP_Location_Date_SecondDate_02_T1_DataType***
+
+Naming conventions for the satellite data:
+- SatelliteType:
+  - LT05 = Landsat 4/5
+  - LE07 = Landsat 7
+  - LC08 = Landsat 8/9
+- Location
+  - 094084 = Cumbung
+  - 093083 and 093084
+- Date 
+  -YearMonthDay - date data was collected
+- SecondDate
+  - Not sure what this is, maybe when the data were processed?? But I don't think we need it.
+- DataType***
+  - This part is of various lengths (but will always start at the same position in the string as the previous sections are all standard lengths) and identifies which band or other data type the data is
+  - SR_B1 = band 1, SR_B2 = band 2, etc.
+
+```{r Input data - rasters}
+# Set your working directory to the folder containing the TIFF files
+setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Raw Landsat data")
+
+# List all the TIFF files in the folder
+all_files <- list.files() # list all files, including those we don't care about
+print(all_files) # check how file names are being read - looks like the extension TIF is capitalised, which we need to code for.
+
+# Now list just the file names we're interested in
+# //d+ refers to a string of one or more digits (0-9)
+file_list <- list.files(pattern = paste("^(LT05|LE07|LC08)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_(SR|ST)_B[2-7]\\.TIF", sep = ""))
+print(file_list)
+
+# Function to extract relevant information from the filename
+extract_info <- function(filename) {
+  parts <- strsplit(filename, "_")[[1]] # the [[1]] extracts the character vector of the components of the file name, rather than creating a list that you have to access the character vector from within
+  satellite <- paste0(substr(parts[1], 1, 1), substr(parts[1], nchar(parts[1]), nchar(parts[1])))  # Extract the first and fourth characters as satellite name (L5, L7, or L8)
+  location <- parts[3]
+  date <- parts[4]
+  band <- gsub("(SR|ST)_", "", parts[length(parts)]) #gsub means substitute one thing for another
+  band <- gsub("\\.TIF", "", band)
+  return(list(satellite = satellite, location = location, date = date, band = band))
+}
+
+# Create empty lists to store the raster objects
+cumbung_list <- list()
+booligal_list <- list()
+
+# Loop through the files and import the rasters, while naming them - Cumbung
+for (filename in file_list) {
+  info <- extract_info(filename)
+  
+  # Check if the band is in the desired list
+  if (info$band %in% c("B2", "B3", "B4", "B5", "B6", "B7")) { 
+    if(info$location %in% c("094084")) {
+    raster_data <- raster(filename)
+    
+    # Name the raster object based on the extracted information
+    raster_name <- paste(info$satellite, info$location, info$date, info$band, sep = "_")
+    
+    # Assign the raster object to the list with the specified name
+    cumbung_list[[raster_name]] <- raster_data
+    
+    # Print a message to indicate successful import and naming
+    cat("Imported and named", filename, "as", raster_name, "\n")
+  } }
+}
+
+# Loop through the files and import the rasters, while naming them - Booligal
+for (filename in file_list) {
+  info <- extract_info(filename)
+  
+  # Check if the band is in the desired list
+  if (info$band %in% c("B2", "B3", "B4", "B5", "B6", "B7")) { 
+    if(info$location %in% c("093084", "093083")) {
+    raster_data <- raster(filename)
+    
+    # Name the raster object based on the extracted information
+    raster_name <- paste(info$satellite, info$location, info$date, info$band, sep = "_")
+    
+    # Assign the raster object to the list with the specified name
+    booligal_list[[raster_name]] <- raster_data
+    
+    # Print a message to indicate successful import and naming
+    cat("Imported and named", filename, "as", raster_name, "\n") #"\n" indicates new line, printing each on a new line
+  } }
+}
+
+
+# now all of the rasters have been imported and stored in "cumbung_list" and "booligal_list"
+```
+
+```{r Input data - shapefiles}
+cumbung <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Boundaries/Cumbung_ecological.shp")
+booligal <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023 Lachlan waterbird and flood datasets compilation/Boundaries/Booligal_ecological.shp")
+```
+
+# 2. Manipulate data
+
+```{r Crop rasters to boundaries}
+clipped_cumbung_list <- list()
+for (raster_name in names(cumbung_list)) {
+  raster_data <- cumbung_list[[raster_name]]
+  clipped_raster <- mask(raster_data, cumbung)
+  clipped_cumbung_list[[raster_name]] <- clipped_raster
+  # Print a message to indicate successful clipping
+  cat("Clipped", raster_name, "\n")
+}
+
+clipped_booligal_list <- list()
+for (raster_name in names(booligal_list)) {
+  raster_data <- booligal_list[[raster_name]]
+  clipped_raster <- mask(raster_data, booligal)
+  clipped_booligal_list[[raster_name]] <- clipped_raster
+    # Print a message to indicate successful clipping
+  cat("Clipped", raster_name, "\n")
+}
+```
+
+Need to group rasters by date so multiple bands from the same date are associated with one another.
+
+```{r Group rasters by date}
+# need a new version of the extract info function that recognises the new file name format (we renamed the rasters)
+# the name name format is: satellite_location_date_band
+
+extract_info_2 <- function(filename) {
+  parts <- strsplit(filename, "_")[[1]] # the [[1]] extracts the character vector of the components of the file name, rather than creating a list that you have to access the character vector from within
+  satellite <- parts[1]
+  location <- parts[2]
+  date <- parts[3]
+  band <- parts[4]
+  return(list(satellite = satellite, location = location, date = date, band = band))
+}
+
+# Cumbung
+grouped_rasters_cumbung <- list()
+for (raster_name in names(clipped_cumbung_list)) {
+  raster_data <- clipped_cumbung_list[[raster_name]]
+  date <- extract_info_2(raster_name)$date
+  band <- extract_info_2(raster_name)$band
+  # Check if a list with the date already exists in grouped_rasters
+  # And name items in the list according to their band 
+  if (band %in% names(grouped_rasters_cumbung[[date]])) {
+    # If it exists, add the raster_data to the existing list
+    grouped_rasters_cumbung[[date]][[band]] <- c(grouped_rasters_cumbung[[date]][[band]], raster_data)
+  } else {
+    # If it doesn't exist, create a new list with the raster_data
+    grouped_rasters_cumbung[[date]][[band]] <- list(raster_data)
+  }
+}
+
+```
+
+Bands of interest to calculate water index
+- for Landsat 4/5 and 7 data, these are band 2 (green), 3 (red), 4 (NIR), 5 (SWIR 1) and 7 (SWIR 2)
+- for Landsat 8/9 data, these are band 3 (green), 4 (red), 5 (NIR), 6 (SWIR 1) and 7 (SWIR 2)
+
+# Up to here - errors below as you can't input a list into the calc function...
+
+```{r Calculate water index - Landsat 4/5 and 7 data}
+
+grouped_rasters_cumbung[["20111104"]][["B3"]]
+
+# list all the possible dates
+cumbung_dates <- names(grouped_rasters_cumbung)
+cumbung_dates
+
+# new list for results 
+water_index_results <- list()
+
+
+for (date in cumbung_dates){
+  # calculate the water index
+  water_index_raster <- 1.7204+171*grouped_rasters_cumbung[[date]][["B2"]]+3*grouped_rasters_cumbung[[date]][["B3"]]-70*grouped_rasters_cumbung[[date]][["B4"]]-45*grouped_rasters_cumbung[[date]][["B5"]]-71*grouped_rasters_cumbung[[date]][["B7"]]
+  # store the results in a new results list
+  water_index_results[[date]] <- water_index_raster
+}
+
+
+
+1.7204+171*grouped_rasters_cumbung[["20111104"]][["B2"]]+3*grouped_rasters_cumbung[["20111104"]][["B3"]]-70*grouped_rasters_cumbung[["20111104"]][["B4"]]-45*grouped_rasters_cumbung[["20111104"]][["B5"]]-71*grouped_rasters_cumbung[["20111104"]][["B7"]]
+
+
+# use the overlay function to do calculations using multiple rasters
+water_index <- overlay(B2, B3, B4, B5, B7, fun = function(B2, B3, B4, B5, B7) {
+  1.7204+171*B2+3*B3-70*B4-45*B5-71*B7
+})
+
+water_index <- overlay(grouped_rasters_cumbung[["20111104"]][["B2"]][[1]], grouped_rasters_cumbung[["20111104"]][["B3"]][[1]], grouped_rasters_cumbung[["20111104"]][["B4"]][[1]], grouped_rasters_cumbung[["20111104"]][["B5"]][[1]], grouped_rasters_cumbung[["20111104"]][["B7"]][[1]], fun = function(B2, B3, B4, B5, B7) {
+  1.7204+171*B2+3*B3-70*B4-45*B5-71*B7
+})
+plot(water_index)
+
+
+```
+
+
+```{r}
+# Function - Landsat 8/9
+Water_index_L89 <- function(b2, b3, b4, b5, b7) {
+  water_index <- 1.7204+171*b3+3*b4-70*b5-45*b6-71*b7
+  return(water_index)
+}
+
+
+    # Print a message to indicate successful calculation
+  cat("Calculated water index for", raster_name, "\n")  
+```
+
