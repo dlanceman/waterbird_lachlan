@@ -22,7 +22,7 @@ library("sf")
 ```
 
 # 1. Input data
-We need to input the appropriate satellite data for each year (2010-2022) and location (Cumbung and Booligal).
+We need to input the appropriate satellite data for each year (2010-2023) and location (Cumbung and Booligal).
 We need green, red, NIR, SWIR 1 and SWIR 2 bands.
 - for Landsat 4/5 and 7 data, these are band 2 (green), 3 (red), 4 (NIR), 5 (SWIR 1) and 7 (SWIR 2)
 - for Landsat 8/9 data, these are band 3 (green), 4 (red), 5 (NIR), 6 (SWIR 1) and 7 (SWIR 2)
@@ -57,7 +57,7 @@ print(all_files) # check how file names are being read - looks like the extensio
 
 # Now list just the file names we're interested in - bands 2 to 7
 # //d+ refers to a string of one or more digits (0-9)
-file_list <- list.files(pattern = paste("^(LT05|LE07|LC08)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_(SR|ST)_B[2-7]\\.TIF", sep = ""))
+file_list <- list.files(pattern = paste("^(LT05|LE07|LC08|LC09)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_(SR|ST)_B[2-7]\\.TIF", sep = ""))
 print(file_list)
 
 # Function to extract relevant information from the filename - satellite, location, date, band
@@ -138,7 +138,8 @@ Landsat 4/5/7 data:
 ```{r Calculate water index - Landsat 4/5/7 - Cumbung}
 
 # 2010
-wi_cumbung_2010 <- overlay(cumbung_list[["L5_094084_20101117_B2"]], cumbung_list[["L5_094084_20101117_B3"]], cumbung_list[["L5_094084_20101117_B4"]], cumbung_list[["L5_094084_20101117_B5"]], cumbung_list[["L5_094084_20101117_B7"]], fun = function(B2, B3, B4, B5, B7) {
+# use Dec 3 as it has less cloud cover
+wi_cumbung_2010 <- overlay(cumbung_list[["L5_094084_20101203_B2"]], cumbung_list[["L5_094084_20101203_B3"]], cumbung_list[["L5_094084_20101203_B4"]], cumbung_list[["L5_094084_20101203_B5"]], cumbung_list[["L5_094084_20101203_B7"]], fun = function(B2, B3, B4, B5, B7) {
   return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
 })
 plot(wi_cumbung_2010)
@@ -178,23 +179,25 @@ plot(wi_bool_2010_1)
 
 # 2011
 # redownloading these data
-
+wi_bool_2011_1 <- overlay(booligal_list[["L5_093083_20111011_B2"]], booligal_list[["L5_093083_20111011_B3"]], booligal_list[["L5_093083_20111011_B4"]], booligal_list[["L5_093083_20111011_B5"]], booligal_list[["L5_093083_20111011_B7"]], fun = function(B2, B3, B4, B5, B7) {
+  return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
+})
+plot(wi_bool_2011_1)
 
 # 2012
 wi_bool_2012_1 <- overlay(booligal_list[["L7_093083_20121022_B2"]], booligal_list[["L7_093083_20121022_B3"]], booligal_list[["L7_093083_20121022_B4"]], booligal_list[["L7_093083_20121022_B5"]], booligal_list[["L7_093083_20121022_B7"]], fun = function(B2, B3, B4, B5, B7) {
   return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
 })
 plot(wi_bool_2012_1)
-# looks weird because of Landsat 7, might want to find another image
+# looks weird because of Landsat 7
 ```
 
 ```{r Calculate water index - Landsat 4/5/7 - Booligal 093084}
 # 2010
-wi_bool_2010_2 <- overlay(booligal_list[["L5_093084_20101024_B2"]], booligal_list[["L5_093084_20101024_B3"]], booligal_list[["L5_093084_20101024_B4"]], booligal_list[["L5_093084_20101024_B5"]], booligal_list[["L5_093084_20101024_B7"]], fun = function(B2, B3, B4, B5, B7) {
+wi_bool_2010_2 <- overlay(booligal_list[["L5_093084_20101008_B2"]], booligal_list[["L5_093084_20101008_B3"]], booligal_list[["L5_093084_20101008_B4"]], booligal_list[["L5_093084_20101008_B5"]], booligal_list[["L5_093084_20101008_B7"]], fun = function(B2, B3, B4, B5, B7) {
   return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
 })
 plot(wi_bool_2010_2)
-# there's a lot of cloud cover, probably best to find another image if possible
 
 # 2011
 wi_bool_2011_2 <- overlay(booligal_list[["L5_093084_20111011_B2"]], booligal_list[["L5_093084_20111011_B3"]], booligal_list[["L5_093084_20111011_B4"]], booligal_list[["L5_093084_20111011_B5"]], booligal_list[["L5_093084_20111011_B7"]], fun = function(B2, B3, B4, B5, B7) {
@@ -218,9 +221,9 @@ Bands of interest to calculate water index
 - for Landsat 8/9 data, these are band 3 (green), 4 (red), 5 (NIR), 6 (SWIR 1) and 7 (SWIR 2)
 
 Landsat 8/9 data:
-- Cumbung - 2013-2019, 2021, 2022
+- Cumbung - 2013-2019, 2021, 2022, 2023, 2024
 - Booligal 093083 - 2013-2022
-- Booligal 093084 - 2011, 2013-2022
+- Booligal 093084 - 2013-2022
 
 ```{r Calculate water index - Landsat 8/9 - Cumbung}
 # 2013
@@ -252,14 +255,17 @@ plot(wi_cumbung_2016)
 
 
 # 2017
-wi_cumbung_2017 <- overlay(cumbung_list[["L8_094084_20171104_B3"]], cumbung_list[["L8_094084_20171104_B4"]], cumbung_list[["L8_094084_20171104_B5"]], cumbung_list[["L8_094084_20171104_B6"]], cumbung_list[["L8_094084_20171104_B7"]], fun = function(B3, B4, B5, B6, B7) {
+wi_cumbung_2017 <- overlay(cumbung_list[["L8_094084_20171120_B3"]], cumbung_list[["L8_094084_20171120_B4"]], cumbung_list[["L8_094084_20171120_B5"]], cumbung_list[["L8_094084_20171120_B6"]], cumbung_list[["L8_094084_20171120_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_cumbung_2017)
 
 
-# 2018
-# still need to get these data
+# 2018 - missing?
+wi_cumbung_2018 <- overlay(cumbung_list[["L8_094084_20181022_B3"]], cumbung_list[["L8_094084_20181022_B4"]], cumbung_list[["L8_094084_20181022_B5"]], cumbung_list[["L8_094084_20181022_B6"]], cumbung_list[["L8_094084_20181022_B7"]], fun = function(B3, B4, B5, B6, B7) {
+  return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
+})
+plot(wi_cumbung_2018)
 
 
 # 2019
@@ -281,15 +287,27 @@ wi_cumbung_2022 <- overlay(cumbung_list[["L8_094084_20221118_B3"]], cumbung_list
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_cumbung_2022)
+
+
+# 2023
+wi_cumbung_2023 <- overlay(cumbung_list[["L8_094084_20231105_B3"]], cumbung_list[["L8_094084_20231105_B4"]], cumbung_list[["L8_094084_20231105_B5"]], cumbung_list[["L8_094084_20231105_B6"]], cumbung_list[["L8_094084_20231105_B7"]], fun = function(B3, B4, B5, B6, B7) {
+  return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
+})
+plot(wi_cumbung_2023)
+
+# 2024
+wi_cumbung_2024 <- overlay(cumbung_list[["L9_094084_20241030_B3"]], cumbung_list[["L9_094084_20241030_B4"]], cumbung_list[["L9_094084_20241030_B5"]], cumbung_list[["L9_094084_20241030_B6"]], cumbung_list[["L9_094084_20241030_B7"]], fun = function(B3, B4, B5, B6, B7) {
+  return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
+})
+plot(wi_cumbung_2024)
 ```
 
 ```{r Calculate water index - Landsat 8/9 - Booligal 093083}
 # 2013
-wi_bool_2013_1 <- overlay(booligal_list[["L8_093083_20131102_B3"]], booligal_list[["L8_093083_20131102_B4"]], booligal_list[["L8_093083_20131102_B5"]], booligal_list[["L8_093083_20131102_B6"]], booligal_list[["L8_093083_20131102_B7"]], fun = function(B3, B4, B5, B6, B7) {
+wi_bool_2013_1 <- overlay(booligal_list[["L8_093083_20131118_B3"]], booligal_list[["L8_093083_20131118_B4"]], booligal_list[["L8_093083_20131118_B5"]], booligal_list[["L8_093083_20131118_B6"]], booligal_list[["L8_093083_20131118_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2013_1)
-
 
 # 2014
 wi_bool_2014_1 <- overlay(booligal_list[["L8_093083_20141121_B3"]], booligal_list[["L8_093083_20141121_B4"]], booligal_list[["L8_093083_20141121_B5"]], booligal_list[["L8_093083_20141121_B6"]], booligal_list[["L8_093083_20141121_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -297,20 +315,17 @@ wi_bool_2014_1 <- overlay(booligal_list[["L8_093083_20141121_B3"]], booligal_lis
 })
 plot(wi_bool_2014_1)
 
-
 # 2015
 wi_bool_2015_1 <- overlay(booligal_list[["L8_093083_20151023_B3"]], booligal_list[["L8_093083_20151023_B4"]], booligal_list[["L8_093083_20151023_B5"]], booligal_list[["L8_093083_20151023_B6"]], booligal_list[["L8_093083_20151023_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2015_1)
 
-
 # 2016
 wi_bool_2016_1 <- overlay(booligal_list[["L8_093083_20161110_B3"]], booligal_list[["L8_093083_20161110_B4"]], booligal_list[["L8_093083_20161110_B5"]], booligal_list[["L8_093083_20161110_B6"]], booligal_list[["L8_093083_20161110_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2016_1)
-# error, probably too little memory, haven't tested from here onwards
 
 # 2017
 wi_bool_2017_1 <- overlay(booligal_list[["L8_093083_20171129_B3"]], booligal_list[["L8_093083_20171129_B4"]], booligal_list[["L8_093083_20171129_B5"]], booligal_list[["L8_093083_20171129_B6"]], booligal_list[["L8_093083_20171129_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -318,13 +333,11 @@ wi_bool_2017_1 <- overlay(booligal_list[["L8_093083_20171129_B3"]], booligal_lis
 })
 plot(wi_bool_2017_1)
 
-
 # 2018
 wi_bool_2018_1 <- overlay(booligal_list[["L8_093083_20181116_B3"]], booligal_list[["L8_093083_20181116_B4"]], booligal_list[["L8_093083_20181116_B5"]], booligal_list[["L8_093083_20181116_B6"]], booligal_list[["L8_093083_20181116_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2018_1)
-
 
 # 2019
 wi_bool_2019_1 <- overlay(booligal_list[["L8_093083_20191119_B3"]], booligal_list[["L8_093083_20191119_B4"]], booligal_list[["L8_093083_20191119_B5"]], booligal_list[["L8_093083_20191119_B6"]], booligal_list[["L8_093083_20191119_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -332,20 +345,17 @@ wi_bool_2019_1 <- overlay(booligal_list[["L8_093083_20191119_B3"]], booligal_lis
 })
 plot(wi_bool_2019_1)
 
-
 # 2020
 wi_bool_2020_1 <- overlay(booligal_list[["L8_093083_20201020_B3"]], booligal_list[["L8_093083_20201020_B4"]], booligal_list[["L8_093083_20201020_B5"]], booligal_list[["L8_093083_20201020_B6"]], booligal_list[["L8_093083_20201020_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2020_1)
 
-
 # 2021
 wi_bool_2021_1 <- overlay(booligal_list[["L8_093083_20211023_B3"]], booligal_list[["L8_093083_20211023_B4"]], booligal_list[["L8_093083_20211023_B5"]], booligal_list[["L8_093083_20211023_B6"]], booligal_list[["L8_093083_20211023_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2021_1)
-
 
 # 2022
 wi_bool_2022_1 <- overlay(booligal_list[["L8_093083_20221010_B3"]], booligal_list[["L8_093083_20221010_B4"]], booligal_list[["L8_093083_20221010_B5"]], booligal_list[["L8_093083_20221010_B6"]], booligal_list[["L8_093083_20221010_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -354,6 +364,7 @@ wi_bool_2022_1 <- overlay(booligal_list[["L8_093083_20221010_B3"]], booligal_lis
 plot(wi_bool_2022_1)
 ```
 
+
 ```{r Calculate water index - Landsat 8/9 - Booligal 093084}
 # 2013
 wi_bool_2013_2 <- overlay(booligal_list[["L8_093084_20131118_B3"]], booligal_list[["L8_093084_20131118_B4"]], booligal_list[["L8_093084_20131118_B5"]], booligal_list[["L8_093084_20131118_B6"]], booligal_list[["L8_093084_20131118_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -361,13 +372,11 @@ wi_bool_2013_2 <- overlay(booligal_list[["L8_093084_20131118_B3"]], booligal_lis
 })
 plot(wi_bool_2013_2)
 
-
 # 2014
-wi_bool_2014_2 <- overlay(booligal_list[["L8_093084_20141105_B3"]], booligal_list[["L8_093084_20141105_B4"]], booligal_list[["L8_093084_20141105_B5"]], booligal_list[["L8_093084_20141105_B6"]], booligal_list[["L8_093084_20141105_B7"]], fun = function(B3, B4, B5, B6, B7) {
+wi_bool_2014_2 <- overlay(booligal_list[["L8_093084_20141121_B3"]], booligal_list[["L8_093084_20141121_B4"]], booligal_list[["L8_093084_20141121_B5"]], booligal_list[["L8_093084_20141121_B6"]], booligal_list[["L8_093084_20141121_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2014_2)
-
 
 # 2015
 wi_bool_2015_2 <- overlay(booligal_list[["L8_093084_20151108_B3"]], booligal_list[["L8_093084_20151108_B4"]], booligal_list[["L8_093084_20151108_B5"]], booligal_list[["L8_093084_20151108_B6"]], booligal_list[["L8_093084_20151108_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -375,17 +384,17 @@ wi_bool_2015_2 <- overlay(booligal_list[["L8_093084_20151108_B3"]], booligal_lis
 })
 plot(wi_bool_2015_2)
 
-
 # 2016
 wi_bool_2016_2 <- overlay(booligal_list[["L8_093084_20161110_B3"]], booligal_list[["L8_093084_20161110_B4"]], booligal_list[["L8_093084_20161110_B5"]], booligal_list[["L8_093084_20161110_B6"]], booligal_list[["L8_093084_20161110_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2016_2)
-# error, probably too little memory, haven't tested from here onwards
 
-# 2017
-# need to redownload this
-
+# 2017 
+wi_bool_2017_2 <- overlay(booligal_list[["L8_093083_20171129_B3"]], booligal_list[["L8_093083_20171129_B4"]], booligal_list[["L8_093083_20171129_B5"]], booligal_list[["L8_093083_20171129_B6"]], booligal_list[["L8_093083_20171129_B7"]], fun = function(B3, B4, B5, B6, B7) {
+  return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
+})
+plot(wi_bool_2017_2)
 
 # 2018
 wi_bool_2018_2 <- overlay(booligal_list[["L8_093084_20181116_B3"]], booligal_list[["L8_093084_20181116_B4"]], booligal_list[["L8_093084_20181116_B5"]], booligal_list[["L8_093084_20181116_B6"]], booligal_list[["L8_093084_20181116_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -393,20 +402,17 @@ wi_bool_2018_2 <- overlay(booligal_list[["L8_093084_20181116_B3"]], booligal_lis
 })
 plot(wi_bool_2018_2)
 
-
 # 2019
 wi_bool_2019_2 <- overlay(booligal_list[["L8_093084_20191119_B3"]], booligal_list[["L8_093084_20191119_B4"]], booligal_list[["L8_093084_20191119_B5"]], booligal_list[["L8_093084_20191119_B6"]], booligal_list[["L8_093084_20191119_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2019_2)
 
-
 # 2020
-wi_bool_2020_2 <- overlay(booligal_list[["L8_093084_20211023_B3"]], booligal_list[["L8_093084_20211023_B4"]], booligal_list[["L8_093084_20211023_B5"]], booligal_list[["L8_093084_20211023_B6"]], booligal_list[["L8_093084_20211023_B7"]], fun = function(B3, B4, B5, B6, B7) {
+wi_bool_2020_2 <- overlay(booligal_list[["L8_093084_20201020_B3"]], booligal_list[["L8_093084_20201020_B4"]], booligal_list[["L8_093084_20201020_B5"]], booligal_list[["L8_093084_20201020_B6"]], booligal_list[["L8_093084_20201020_B7"]], fun = function(B3, B4, B5, B6, B7) {
   return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
 })
 plot(wi_bool_2020_2)
-
 
 # 2021
 wi_bool_2021_2 <- overlay(booligal_list[["L8_093084_20211023_B3"]], booligal_list[["L8_093084_20211023_B4"]], booligal_list[["L8_093084_20211023_B5"]], booligal_list[["L8_093084_20211023_B6"]], booligal_list[["L8_093084_20211023_B7"]], fun = function(B3, B4, B5, B6, B7) {
@@ -414,170 +420,99 @@ wi_bool_2021_2 <- overlay(booligal_list[["L8_093084_20211023_B3"]], booligal_lis
 })
 plot(wi_bool_2021_2)
 
-
-# 2022
-# need to redownload
+# 2022 
+wi_bool_2022_2 <- overlay(booligal_list[["L8_093084_20221010_B3"]], booligal_list[["L8_093084_20221010_B4"]], booligal_list[["L8_093084_20221010_B5"]], booligal_list[["L8_093084_20221010_B6"]], booligal_list[["L8_093084_20221010_B7"]], fun = function(B3, B4, B5, B6, B7) {
+  return(1.7204+171*B3+3*B4-70*B5-45*B6-71*B7)
+})
+plot(wi_bool_2022_2)
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-# Convert to binary water vs non-water rasters
 
 
 # 4. Merge Booligal images
 
-# 5. Clip to areas of interest?
+```{r Merge Booligal images}
+wi_bool_2010 <- merge(wi_bool_2010_1, wi_bool_2010_2)
+wi_bool_2011 <- merge(wi_bool_2011_1, wi_bool_2011_2)
+wi_bool_2012 <- merge(wi_bool_2012_1, wi_bool_2012_2)
+wi_bool_2013 <- merge(wi_bool_2013_1, wi_bool_2013_2)
+wi_bool_2014 <- merge(wi_bool_2014_1, wi_bool_2014_2)
+wi_bool_2015 <- merge(wi_bool_2015_1, wi_bool_2015_2)
+wi_bool_2016 <- merge(wi_bool_2016_1, wi_bool_2016_2)
+wi_bool_2017 <- merge(wi_bool_2017_1, wi_bool_2017_2)
+wi_bool_2018 <- merge(wi_bool_2018_1, wi_bool_2018_2)
+wi_bool_2019 <- merge(wi_bool_2019_1, wi_bool_2019_2)
+wi_bool_2020 <- merge(wi_bool_2020_1, wi_bool_2020_2)
+wi_bool_2021 <- merge(wi_bool_2021_1, wi_bool_2021_2)
+wi_bool_2022 <- merge(wi_bool_2022_1, wi_bool_2022_2)
+```
 
-# 6. Write rasters
 
-```{r}
+# 5. Write rasters
 
-
+```{r Write water index rasters - cumbung}
 # write rasters
-#setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
-
-#writeRaster(wi_cumbung_2010,filename = "Export/wi_cumbung_20101117.tif", format="GTiff", overwrite = TRUE)
-#writeRaster(wi_cumbung_2011,filename = "Export/wi_cumbung_20101104.tif", format="GTiff", overwrite = TRUE)
-#writeRaster(wi_cumbung_2012,filename = "Export/wi_cumbung_20101114.tif", format="GTiff", overwrite = TRUE)
-#writeRaster(wi_cumbung_2010,filename = "Export/wi_cumbung_20201018.tif", format="GTiff", overwrite = TRUE)
-```
-
-
-
-
-
-
-
-
-# Extra junk
-
-# from old 2. Manipulate data
-
-```{r Crop rasters to boundaries}
-clipped_cumbung_list <- list()
-for (raster_name in names(cumbung_list)) {
-  raster_data <- cumbung_list[[raster_name]]
-  clipped_raster <- mask(raster_data, cumbung)
-  clipped_cumbung_list[[raster_name]] <- clipped_raster
-  # Print a message to indicate successful clipping
-  cat("Clipped", raster_name, "\n")
-}
-
-clipped_booligal_list <- list()
-for (raster_name in names(booligal_list)) {
-  raster_data <- booligal_list[[raster_name]]
-  clipped_raster <- mask(raster_data, booligal)
-  clipped_booligal_list[[raster_name]] <- clipped_raster
-    # Print a message to indicate successful clipping
-  cat("Clipped", raster_name, "\n")
-}
-```
-
-Need to group rasters by date so multiple bands from the same date are associated with one another.
-
-```{r Group rasters by date}
-# need a new version of the extract info function that recognises the new file name format (we renamed the rasters)
-# the name name format is: satellite_location_date_band
-
-extract_info_2 <- function(filename) {
-  parts <- strsplit(filename, "_")[[1]] # the [[1]] extracts the character vector of the components of the file name, rather than creating a list that you have to access the character vector from within
-  satellite <- parts[1]
-  location <- parts[2]
-  date <- parts[3]
-  band <- parts[4]
-  return(list(satellite = satellite, location = location, date = date, band = band))
-}
-
-# Cumbung
-grouped_rasters_cumbung <- list()
-for (raster_name in names(clipped_cumbung_list)) {
-  raster_data <- clipped_cumbung_list[[raster_name]]
-  date <- extract_info_2(raster_name)$date
-  band <- extract_info_2(raster_name)$band
-  # Check if a list with the date already exists in grouped_rasters
-  # And name items in the list according to their band 
-  if (band %in% names(grouped_rasters_cumbung[[date]])) {
-    # If it exists, add the raster_data to the existing list
-    grouped_rasters_cumbung[[date]][[band]] <- c(grouped_rasters_cumbung[[date]][[band]], raster_data)
-  } else {
-    # If it doesn't exist, create a new list with the raster_data
-    grouped_rasters_cumbung[[date]][[band]] <- list(raster_data)
-  }
-}
-
-```
-
-
-
-```{r troubleshooting}
-
-grouped_rasters_cumbung[["20111104"]][["B3"]]
-plot(grouped_rasters_cumbung[["20111104"]][["B3"]][[1]]) # plotting an empty raster
-
-# try plotting a raster directly from the raw data
-testRaster <- raster("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Raw Landsat data/LT05_L2SP_094084_20111104_20200820_02_T1_SR_B2.tif")
-plot(testRaster) # plots correctly, so the program is not reading the rasters in the list correctly
-
-# try plotting a raster from the original imported list
-plot(cumbung_list[["L5_094084_20111104_B6"]]) # plots correctly, issue is not from this stage.
-
-# try plotting the clip layer
-plot(cumbung) # this plots with five plots according to attribute, not sure if that's normal
-cumbung # getting info about this shapefile, it looks like its geometry is in latitude rather than a projected coordinate system, which may have stuffed things up when cropping?
-
-# try plotting a clipped raster
-plot(clipped_cumbung_list[["L5_094084_20111104_B6"]]) # empty.. I think it was the clipping that stuffed things around due to different coordinate systems
-
-# try water index from below using rasters from the original images, rather than the clipped images
-
-water_index <- overlay(cumbung_list[["L5_094084_20111104_B2"]], cumbung_list[["L5_094084_20111104_B3"]], cumbung_list[["L5_094084_20111104_B4"]], cumbung_list[["L5_094084_20111104_B5"]], cumbung_list[["L5_094084_20111104_B7"]], fun = function(B2, B3, B4, B5, B7) {
-  return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
-})
-plot(water_index) # success!! woohoo
-```
-
-
-```{r Calculate water index - Landsat 4/5 and 7 data}
-
-# list all the possible dates
-cumbung_dates <- names(grouped_rasters_cumbung)
-cumbung_dates
-
-# new list for results 
-water_index_results <- list()
-
-
-# use the overlay function to do calculations using multiple rasters
-water_index <- overlay(grouped_rasters_cumbung[["20111104"]][["B2"]][[1]], grouped_rasters_cumbung[["20111104"]][["B3"]][[1]], grouped_rasters_cumbung[["20111104"]][["B4"]][[1]], grouped_rasters_cumbung[["20111104"]][["B5"]][[1]], grouped_rasters_cumbung[["20111104"]][["B7"]][[1]], fun = function(B2, B3, B4, B5, B7) {
-  return(1.7204+171*B2+3*B3-70*B4-45*B5-71*B7)
-})
-plot(water_index)
-
 setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
-#writeRaster(water_index,filename = "Export/water_index_20111104_cumbung.tif", format="GTiff", overwrite = TRUE)
 
+writeRaster(wi_cumbung_2010,filename = "Export/wi_cumbung_20101203.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2011,filename = "Export/wi_cumbung_20111104.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2012,filename = "Export/wi_cumbung_20121114.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2013,filename = "Export/wi_cumbung_20131125.tif", format="GTiff", overwrite = TRUE)
+#writeRaster(wi_cumbung_2014,filename = "Export/wi_cumbung_20141112.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2015,filename = "Export/wi_cumbung_20151115.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2016,filename = "Export/wi_cumbung_20161117.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2017,filename = "Export/wi_cumbung_20171104.tif", format="GTiff", overwrite = TRUE)
+#writeRaster(wi_cumbung_2018,filename = "Export/wi_cumbung_20181022.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2019,filename = "Export/wi_cumbung_20191110.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2020,filename = "Export/wi_cumbung_20201018.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2021,filename = "Export/wi_cumbung_20211030.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2022,filename = "Export/wi_cumbung_20221118.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2023,filename = "Export/wi_cumbung_20231105.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2024,filename = "Export/wi_cumbung_20241030.tif", format="GTiff", overwrite = TRUE)
+```
+
+```{r Write water index rasters - booligal}
+writeRaster(wi_bool_2010,filename = "Export/wi_bool_20101008.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2011,filename = "Export/wi_bool_20111011.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2012,filename = "Export/wi_bool_20121022.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2013,filename = "Export/wi_bool_20131118.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2014,filename = "Export/wi_bool_20141121.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2015,filename = "Export/wi_bool_20151023-1108.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2016,filename = "Export/wi_bool_20161110.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2017,filename = "Export/wi_bool_20171129.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2018,filename = "Export/wi_bool_20181116.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2019,filename = "Export/wi_bool_20191119.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2020,filename = "Export/wi_bool_20201020.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2021,filename = "Export/wi_bool_20211023.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2022,filename = "Export/wi_bool_20221010_2.tif", format="GTiff", overwrite = TRUE)
 ```
 
 
-```{r}
-# Function - Landsat 8/9
-Water_index_L89 <- function(b2, b3, b4, b5, b7) {
-  water_index <- 1.7204+171*b3+3*b4-70*b5-45*b6-71*b7
-  return(water_index)
-}
+```{r Write reclassified rasters}
+# write rasters
+setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
 
+writeRaster(wi_cumbung_20141112_reclass,filename = "Export/wi_cumbung_20141112_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2015_reclass,filename = "Export/wi_cumbung_20151115_reclass.tif", format="GTiff", overwrite = TRUE)
 
-    # Print a message to indicate successful calculation
-  cat("Calculated water index for", raster_name, "\n")  
+writeRaster(wi_cumbung_2010_reclass,filename = "Export/wi_cumbung_20101117_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2011_reclass,filename = "Export/wi_cumbung_20111104_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2012_reclass,filename = "Export/wi_cumbung_20121106_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2013_reclass,filename = "Export/wi_cumbung_20131125_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2016_reclass,filename = "Export/wi_cumbung_20161117_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2017_reclass,filename = "Export/wi_cumbung_20171120_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2018_reclass,filename = "Export/wi_cumbung_20181022_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2019_reclass,filename = "Export/wi_cumbung_20191110_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2020_reclass,filename = "Export/wi_cumbung_20201018_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2021_reclass,filename = "Export/wi_cumbung_20211030_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2022_reclass,filename = "Export/wi_cumbung_20221118_reclass.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2022_reclass,filename = "Export/wi_cumbung_20221118_reclass.tif", format="GTiff", overwrite = TRUE)
 ```
+
+
+
+
+
+
 
