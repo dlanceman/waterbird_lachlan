@@ -49,7 +49,7 @@ Naming conventions for the satellite data:
 
 ```{r Input data - rasters}
 # Set your working directory to the folder containing the TIFF files
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Raw Landsat data")
+setwd("C:/Your/Working/Directory")
 
 # List all the TIFF files in the folder
 all_files <- list.files() # list all files, including those we don't care about
@@ -72,6 +72,7 @@ extract_info <- function(filename) {
 }
 
 # Create empty lists to store the raster objects
+# (rename as appropriate, ensuring you also rename the below sections accordingly)
 cumbung_list <- list()
 booligal_list <- list()
 
@@ -120,8 +121,9 @@ for (filename in file_list) {
 ```
 
 ```{r Input data - shapefiles}
-cumbung <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Boundaries/Cumbung_ecological.shp")
-booligal <- st_read("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/Boundaries/Booligal_ecological.shp")
+# input any boundaries for your wetlands of interest, to streamline the analysis process by cropping inundation rasters to smaller areas (rename as appropriate, ensuring you also rename the below sections accordingly)
+cumbung <- st_read("C:/Your/Working/Directory/YourBoundary1.shp")
+booligal <- st_read("C:/Your/Working/Directory/YourBoundary2.shp")
 ```
 
 
@@ -433,6 +435,7 @@ plot(wi_bool_2022_2)
 # 4. Merge Booligal images
 
 ```{r Merge Booligal images}
+# if your wetland area includes multiple satellite images, merge them here.
 wi_bool_2010 <- merge(wi_bool_2010_1, wi_bool_2010_2)
 wi_bool_2011 <- merge(wi_bool_2011_1, wi_bool_2011_2)
 wi_bool_2012 <- merge(wi_bool_2012_1, wi_bool_2012_2)
@@ -453,17 +456,17 @@ wi_bool_2022 <- merge(wi_bool_2022_1, wi_bool_2022_2)
 
 ```{r Write water index rasters - cumbung}
 # write rasters
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
+setwd("C:/Your/Working/Directory/Output")
 
 writeRaster(wi_cumbung_2010,filename = "Export/wi_cumbung_20101203.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2011,filename = "Export/wi_cumbung_20111104.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2012,filename = "Export/wi_cumbung_20121114.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2013,filename = "Export/wi_cumbung_20131125.tif", format="GTiff", overwrite = TRUE)
-#writeRaster(wi_cumbung_2014,filename = "Export/wi_cumbung_20141112.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2014,filename = "Export/wi_cumbung_20141112.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2015,filename = "Export/wi_cumbung_20151115.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2016,filename = "Export/wi_cumbung_20161117.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2017,filename = "Export/wi_cumbung_20171104.tif", format="GTiff", overwrite = TRUE)
-#writeRaster(wi_cumbung_2018,filename = "Export/wi_cumbung_20181022.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2018,filename = "Export/wi_cumbung_20181022.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2019,filename = "Export/wi_cumbung_20191110.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2020,filename = "Export/wi_cumbung_20201018.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_cumbung_2021,filename = "Export/wi_cumbung_20211030.tif", format="GTiff", overwrite = TRUE)
@@ -473,6 +476,9 @@ writeRaster(wi_cumbung_2024,filename = "Export/wi_cumbung_20241030.tif", format=
 ```
 
 ```{r Write water index rasters - booligal}
+# write rasters
+setwd("C:/Your/Working/Directory/Output")
+
 writeRaster(wi_bool_2010,filename = "Export/wi_bool_20101008.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_bool_2011,filename = "Export/wi_bool_20111011.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_bool_2012,filename = "Export/wi_bool_20121022.tif", format="GTiff", overwrite = TRUE)
@@ -487,32 +493,3 @@ writeRaster(wi_bool_2020,filename = "Export/wi_bool_20201020.tif", format="GTiff
 writeRaster(wi_bool_2021,filename = "Export/wi_bool_20211023.tif", format="GTiff", overwrite = TRUE)
 writeRaster(wi_bool_2022,filename = "Export/wi_bool_20221010_2.tif", format="GTiff", overwrite = TRUE)
 ```
-
-
-```{r Write reclassified rasters}
-# write rasters
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2023_Lachlan_waterbird_and_flood_datasets_compilation/R/waterbird_lachlan")
-
-writeRaster(wi_cumbung_20141112_reclass,filename = "Export/wi_cumbung_20141112_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2015_reclass,filename = "Export/wi_cumbung_20151115_reclass.tif", format="GTiff", overwrite = TRUE)
-
-writeRaster(wi_cumbung_2010_reclass,filename = "Export/wi_cumbung_20101117_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2011_reclass,filename = "Export/wi_cumbung_20111104_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2012_reclass,filename = "Export/wi_cumbung_20121106_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2013_reclass,filename = "Export/wi_cumbung_20131125_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2016_reclass,filename = "Export/wi_cumbung_20161117_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2017_reclass,filename = "Export/wi_cumbung_20171120_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2018_reclass,filename = "Export/wi_cumbung_20181022_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2019_reclass,filename = "Export/wi_cumbung_20191110_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2020_reclass,filename = "Export/wi_cumbung_20201018_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2021_reclass,filename = "Export/wi_cumbung_20211030_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2022_reclass,filename = "Export/wi_cumbung_20221118_reclass.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2022_reclass,filename = "Export/wi_cumbung_20221118_reclass.tif", format="GTiff", overwrite = TRUE)
-```
-
-
-
-
-
-
-
