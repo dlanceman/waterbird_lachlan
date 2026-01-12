@@ -126,13 +126,6 @@ for (filename in file_list) {
 # now all of the rasters have been imported and stored in "cumbung_list" and "booligal_list"
 ```
 
-```{r Input data - shapefiles}
-# input any boundaries for your wetlands of interest, to streamline the analysis process by cropping inundation rasters to smaller areas (rename as appropriate, ensuring you also rename the below sections accordingly)
-cumbung <- st_read(here("../../Boundaries/Cumbung_ecological.shp"))
-booligal <- st_read(here("../../Boundaries/Booligal_ecological.shp"))
-
-```
-
 
 # 2. Calculate water index - Landsat 4/5/7
 
