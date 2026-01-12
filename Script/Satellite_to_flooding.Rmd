@@ -15,10 +15,12 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("raster")
 #install.packages("stringr")
 #install.packages("sf")
+#install.packages("here")
 
-library("raster")
-library("stringr")
-library("sf")
+library(raster)
+library(stringr)
+library(sf)
+library(here)
 ```
 
 # 1. Input data
@@ -46,10 +48,14 @@ Naming conventions for the satellite data:
 - DataType***
   - This part is of various lengths (but will always start at the same position in the string as the previous sections are all standard lengths) and identifies which band or other data type the data is
   - SR_B1 = band 1, SR_B2 = band 2, etc.
+  - Check here that your data say SR (surface reflectance) not ST (surface temperature) - if ST, you may have accidentally downloaded the wrong data and should go back and download the surface reflectance data
+  
+As we import our data into lists, we are renaming the rasters to just retain the information we need. The new naming format is as follows:
+SatelliteType_Location_Date_Band - e.g., L8_094084_20131125_B3
 
 ```{r Input data - rasters}
-# Set your working directory to the folder containing the TIFF files
-setwd("C:/Your/Working/Directory")
+# Set your working directory to the folder containing the TIFF files. Here starts the directory in your R project folder, and then write the relative path to where your data are.
+setwd(here("../../Raw Landsat data"))
 
 # List all the TIFF files in the folder
 all_files <- list.files() # list all files, including those we don't care about
@@ -57,7 +63,7 @@ print(all_files) # check how file names are being read - looks like the extensio
 
 # Now list just the file names we're interested in - bands 2 to 7
 # //d+ refers to a string of one or more digits (0-9)
-file_list <- list.files(pattern = paste("^(LT05|LE07|LC08|LC09)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_(SR|ST)_B[2-7]\\.TIF", sep = ""))
+file_list <- list.files(pattern = paste("^(LT05|LE07|LC08|LC09)_L2SP_\\d+_\\d+_\\d+_(02_)?T[1-2]_SR_B[2-7]\\.TIF", sep = ""))
 print(file_list)
 
 # Function to extract relevant information from the filename - satellite, location, date, band
@@ -66,7 +72,7 @@ extract_info <- function(filename) {
   satellite <- paste0(substr(parts[1], 1, 1), substr(parts[1], nchar(parts[1]), nchar(parts[1])))  # Extract the first and fourth characters as satellite name (L5, L7, or L8)
   location <- parts[3]
   date <- parts[4]
-  band <- gsub("(SR|ST)_", "", parts[length(parts)]) #gsub means substitute one thing for another
+  band <- gsub("SR_", "", parts[length(parts)]) #gsub means substitute one thing for another
   band <- gsub("\\.TIF", "", band)
   return(list(satellite = satellite, location = location, date = date, band = band))
 }
@@ -122,8 +128,9 @@ for (filename in file_list) {
 
 ```{r Input data - shapefiles}
 # input any boundaries for your wetlands of interest, to streamline the analysis process by cropping inundation rasters to smaller areas (rename as appropriate, ensuring you also rename the below sections accordingly)
-cumbung <- st_read("C:/Your/Working/Directory/YourBoundary1.shp")
-booligal <- st_read("C:/Your/Working/Directory/YourBoundary2.shp")
+cumbung <- st_read(here("../../Boundaries/Cumbung_ecological.shp"))
+booligal <- st_read(here("../../Boundaries/Booligal_ecological.shp"))
+
 ```
 
 
@@ -456,40 +463,38 @@ wi_bool_2022 <- merge(wi_bool_2022_1, wi_bool_2022_2)
 
 ```{r Write water index rasters - cumbung}
 # write rasters
-setwd("C:/Your/Working/Directory/Output")
 
-writeRaster(wi_cumbung_2010,filename = "Export/wi_cumbung_20101203.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2011,filename = "Export/wi_cumbung_20111104.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2012,filename = "Export/wi_cumbung_20121114.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2013,filename = "Export/wi_cumbung_20131125.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2014,filename = "Export/wi_cumbung_20141112.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2015,filename = "Export/wi_cumbung_20151115.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2016,filename = "Export/wi_cumbung_20161117.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2017,filename = "Export/wi_cumbung_20171104.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2018,filename = "Export/wi_cumbung_20181022.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2019,filename = "Export/wi_cumbung_20191110.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2020,filename = "Export/wi_cumbung_20201018.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2021,filename = "Export/wi_cumbung_20211030.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2022,filename = "Export/wi_cumbung_20221118.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2023,filename = "Export/wi_cumbung_20231105.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_cumbung_2024,filename = "Export/wi_cumbung_20241030.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2010,filename = here("Export/wi_cumbung_20101203.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2011,filename = here("Export/wi_cumbung_20111104.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2012,filename = here("Export/wi_cumbung_20121114.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2013,filename = here("Export/wi_cumbung_20131125.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2014,filename = here("Export/wi_cumbung_20141112.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2015,filename = here("Export/wi_cumbung_20151115.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2016,filename = here("Export/wi_cumbung_20161117.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2017,filename = here("Export/wi_cumbung_20171104.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2018,filename = here("Export/wi_cumbung_20181022.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2019,filename = here("Export/wi_cumbung_20191110.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2020,filename = here("Export/wi_cumbung_20201018.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2021,filename = here("Export/wi_cumbung_20211030.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2022,filename = here("Export/wi_cumbung_20221118.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2023,filename = here("Export/wi_cumbung_20231105.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_cumbung_2024,filename = here("Export/wi_cumbung_20241030.tif"), format="GTiff", overwrite = TRUE)
 ```
 
 ```{r Write water index rasters - booligal}
 # write rasters
-setwd("C:/Your/Working/Directory/Output")
 
-writeRaster(wi_bool_2010,filename = "Export/wi_bool_20101008.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2011,filename = "Export/wi_bool_20111011.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2012,filename = "Export/wi_bool_20121022.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2013,filename = "Export/wi_bool_20131118.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2014,filename = "Export/wi_bool_20141121.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2015,filename = "Export/wi_bool_20151023-1108.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2016,filename = "Export/wi_bool_20161110.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2017,filename = "Export/wi_bool_20171129.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2018,filename = "Export/wi_bool_20181116.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2019,filename = "Export/wi_bool_20191119.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2020,filename = "Export/wi_bool_20201020.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2021,filename = "Export/wi_bool_20211023.tif", format="GTiff", overwrite = TRUE)
-writeRaster(wi_bool_2022,filename = "Export/wi_bool_20221010_2.tif", format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2010,filename = here("Export/wi_bool_20101008.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2011,filename = here("Export/wi_bool_20111011.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2012,filename = here("Export/wi_bool_20121022.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2013,filename = here("Export/wi_bool_20131118.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2014,filename = here("Export/wi_bool_20141121.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2015,filename = here("Export/wi_bool_20151023-1108.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2016,filename = here("Export/wi_bool_20161110.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2017,filename = here("Export/wi_bool_20171129.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2018,filename = here("Export/wi_bool_20181116.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2019,filename = here("Export/wi_bool_20191119.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2020,filename = here("Export/wi_bool_20201020.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2021,filename = here("Export/wi_bool_20211023.tif"), format="GTiff", overwrite = TRUE)
+writeRaster(wi_bool_2022,filename = here("Export/wi_bool_20221010_2.tif"), format="GTiff", overwrite = TRUE)
 ```
