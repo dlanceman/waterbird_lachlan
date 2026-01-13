@@ -28,6 +28,8 @@ We need to input the appropriate satellite data for each year (2010-2023) and lo
 We need green, red, NIR, SWIR 1 and SWIR 2 bands.
 - for Landsat 4/5 and 7 data, these are band 2 (green), 3 (red), 4 (NIR), 5 (SWIR 1) and 7 (SWIR 2)
 - for Landsat 8/9 data, these are band 3 (green), 4 (red), 5 (NIR), 6 (SWIR 1) and 7 (SWIR 2)
+- for Sentinel 2 data, these are band 3 (green), 4 (red), 8 (NIR), 11 (SWIR 1) and 12 (SWIR 2) - note that the SWIR data are available at a 20m, rather than 10m resolution. Note that these data have different naming conventions, etc. than Landsat data. This script is set up for Landsat data, so modifications would have to be made to cater for Sentinel 2 data.
+
 
 Naming format for data:
 - Example name: LT05_L2SP_094084_20111104_20200820_02_T1_ST_QA
